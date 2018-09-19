@@ -3,14 +3,37 @@ from tangos.properties.pynbody.centring import centred_calculation
 
 
 class DensityAtRadius(PynbodyHaloProperties):
+    """
+    Modular class to calculate the density in a sphere at a given radius.
+    Examples of simple class children are given below.
+    """
+
+    @staticmethod
+    def _get_radius_def():
+        """
+        Implement your own method depending on how radius is defined.
+        A string corresponding to a halo property can be supplied, e.g. "max_radius" or "nfw_rs" or else.
+        A single number is assumed to correspond as a conversion factor between your radius unit and
+        the unit in which radii are internally stored
+        """
+        raise NotImplementedError("This is meant to be an abstract class")
 
     @staticmethod
     def _number_radii():
+        """
+        Implement your own method to define the radius of the final sphere as
+        _number_radii times _get_radius_def
+        """
         raise NotImplementedError("This is meant to be an abstract class")
 
     @classmethod
-    def get_radius(cls):
-        return cls._number_radii()
+    def get_radius(cls, halo):
+        if cls._get_radius_def is str:
+            return cls._number_radii() * halo[cls._get_radius_def()]
+        elif cls._get_radius_def is float:
+            return cls._number_radii() * cls._get_radius_def()
+        else:
+            raise KeyError("Radius definition not supported")
 
     @centred_calculation
     def calculate(self, particle_data, existing_properties):
@@ -18,115 +41,52 @@ class DensityAtRadius(PynbodyHaloProperties):
         import pynbody.analysis.cosmology
 
         mass = particle_data.d['mass'].sum().in_units("1 Msol")
-        volume = 4 * np.pi / 3 * (self.get_radius() * existing_properties['max_radius']) ** 3
+        volume = 4 * np.pi / 3 * (self.get_radius(existing_properties)) ** 3
         rho_m = pynbody.analysis.cosmology.rho_M(particle_data)
         return mass/volume, mass/volume/rho_m
 
     def region_specification(self, existing_properties):
         import pynbody
-        return pynbody.filt.Sphere(self.get_radius() * existing_properties['max_radius'],
-                                   existing_properties['shrink_center'])
+        return pynbody.filt.Sphere(self.get_radius(existing_properties), existing_properties['shrink_center'])
 
     def requires_property(self):
-        return ["shrink_center", "max_radius"]
+        if self._get_radius_def is str:
+            return ["shrink_center", self._get_radius_def()]
+        else:
+            return ["shrink_center"]
 
 
-class DensityAt4Radii(DensityAtRadius):
+class DensityAt4Rmax(DensityAtRadius):
     names = "rho_4rmax", "overdensity_4rmax"
 
     @staticmethod
+    def _get_radius_def():
+        return "max_radius"
+
+    @staticmethod
     def _number_radii():
         return 4.0
 
 
-class DensityAt8Radii(DensityAtRadius):
-    names = "rho_8rmax", "overdensity_8rmax"
-
-    @staticmethod
-    def _number_radii():
-        return 8.0
-
-
-class DensityAt10Radii(DensityAtRadius):
-    names = "rho_10rmax", "overdensity_10rmax"
-
-    @staticmethod
-    def _number_radii():
-        return 10.0
-
-
-class DensityAtScale(PynbodyHaloProperties):
-
-    @staticmethod
-    def _number_Mpc():
-        raise NotImplementedError("This is meant to be an abstract class")
-
-    @classmethod
-    def get_scale(cls):
-        return cls._number_Mpc() * 1000
-
-    @centred_calculation
-    def calculate(self, particle_data, existing_properties):
-        import numpy as np
-        import pynbody.analysis.cosmology
-
-        mass = particle_data.d['mass'].sum().in_units("1 Msol")
-        volume = 4 * np.pi / 3 * (self.get_scale()) ** 3
-        rho_m = pynbody.analysis.cosmology.rho_M(particle_data)
-        return mass/volume, mass/volume/rho_m
-
-    def region_specification(self, existing_properties):
-        import pynbody
-        return pynbody.filt.Sphere(self.get_scale(),
-                                   existing_properties['shrink_center'])
-
-    def requires_property(self):
-        return ["shrink_center", "max_radius"]
-
-
-class DensityAt15Mpc(DensityAtScale):
-    names = "rho_15Mpc", "overdensity_15Mpc"
-
-    @staticmethod
-    def _number_Mpc():
-        return 15.0
-
-
-class DensityAt10Mpc(DensityAtScale):
+class DensityAt10Mpc(DensityAtRadius):
     names = "rho_10Mpc", "overdensity_10Mpc"
 
     @staticmethod
-    def _number_Mpc():
+    def _get_radius_def():
+        return 1000.0
+
+    @staticmethod
+    def _number_radii():
         return 10.0
 
 
-class DensityAt4Mpc(DensityAtScale):
-    names = "rho_4Mpc", "overdensity_4Mpc"
+class DensityAt1NFWRs(DensityAtRadius):
+    names = "rho_1nfw_rs", "overdensity_1nfw_rs"
 
     @staticmethod
-    def _number_Mpc():
-        return 4.0
-
-
-class DensityAt8Mpc(DensityAtScale):
-    names = "rho_8Mpc", "overdensity_8Mpc"
+    def _get_radius_def():
+        return "nfw_rs"
 
     @staticmethod
-    def _number_Mpc():
-        return 8.0
-
-
-class DensityAt1Mpc(DensityAtScale):
-    names = "rho_1Mpc", "overdensity_1Mpc"
-
-    @staticmethod
-    def _number_Mpc():
+    def _number_radii():
         return 1.0
-
-
-class DensityAt2Mpc(DensityAtScale):
-    names = "rho_2Mpc", "overdensity_2Mpc"
-
-    @staticmethod
-    def _number_Mpc():
-        return 2.0
