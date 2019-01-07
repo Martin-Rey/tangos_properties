@@ -27,6 +27,10 @@ class TimeAtWhichQuantityIsXXPerCent(PropertyCalculation):
     def get_target(cls):
         return cls._get_target_value()
 
+    @classmethod
+    def no_proxies(self):
+        return True
+
     @staticmethod
     def _find_linear_intersect(y1, y0, x1, x0, target):
         slope = (y1 - y0) / (x1 - x0)
