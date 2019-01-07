@@ -1,4 +1,5 @@
 from tangos.properties.pynbody import PynbodyHaloProperties
+from tangos.properties import PropertyCalculation
 from tangos.properties.pynbody.centring import centred_calculation
 
 
@@ -92,3 +93,25 @@ class Radius500c(Radius):
     @staticmethod
     def _get_reference_definition():
         return 'critical'
+
+
+class HalfMassRadius(PropertyCalculation):
+    names = "half_mass_radius"
+
+    def no_proxies(self):
+        return True
+
+    def calculate(self, _, existing_properties):
+        import numpy as np
+        rbins = existing_properties['rbins_profile']
+        mass = existing_properties['dm_mass_profile']
+        assert (rbins.shape == mass.shape)
+
+        target_mass = 0.5 * existing_properties['M200c']
+
+        index_half_mass_radius = np.where(mass >= target_mass)[0]
+
+        return rbins[index_half_mass_radius].min()
+
+    def requires_property(self):
+        return ['dm_mass_profile', "rbins_profile", "M200c"]
