@@ -28,9 +28,9 @@ class DensityAtRadius(PynbodyHaloProperties):
 
     @classmethod
     def get_radius(cls, halo):
-        if cls._get_radius_def is str:
+        if type(cls._get_radius_def()) is str:
             return cls._number_radii() * halo[cls._get_radius_def()]
-        elif cls._get_radius_def is float:
+        elif type(cls._get_radius_def()) is float:
             return cls._number_radii() * cls._get_radius_def()
         else:
             raise KeyError("Radius definition not supported")
@@ -50,7 +50,7 @@ class DensityAtRadius(PynbodyHaloProperties):
         return pynbody.filt.Sphere(self.get_radius(existing_properties), existing_properties['shrink_center'])
 
     def requires_property(self):
-        if self._get_radius_def is str:
+        if type(self._get_radius_def()) is str:
             return ["shrink_center", self._get_radius_def()]
         else:
             return ["shrink_center"]
@@ -78,6 +78,30 @@ class DensityAt10Mpc(DensityAtRadius):
     @staticmethod
     def _number_radii():
         return 10.0
+
+
+class DensityAt4Mpc(DensityAtRadius):
+    names = "rho_4Mpc", "overdensity_4Mpc"
+
+    @staticmethod
+    def _get_radius_def():
+        return 1000.0
+
+    @staticmethod
+    def _number_radii():
+        return 4.0
+
+
+class DensityAt8Mpc(DensityAtRadius):
+    names = "rho_8Mpc", "overdensity_8Mpc"
+
+    @staticmethod
+    def _get_radius_def():
+        return 1000.0
+
+    @staticmethod
+    def _number_radii():
+        return 8.0
 
 
 class DensityAt1NFWRs(DensityAtRadius):
