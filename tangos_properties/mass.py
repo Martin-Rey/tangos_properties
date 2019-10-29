@@ -1,5 +1,6 @@
 from tangos.properties.pynbody import PynbodyHaloProperties
 from tangos.properties.pynbody.centring import centred_calculation
+from tangos.properties import PropertyCalculation
 
 
 class HaloFinderMass(PynbodyHaloProperties):
@@ -74,3 +75,18 @@ class Mass500c(Mass):
 
     def requires_property(self):
         return ["r500c"]
+
+
+class EnclosedNFWMASS(PropertyCalculation):
+    names = "M_1nfw_rs"
+    requires_particle_data = False
+
+    def calculate(self, particle_data, existing_properties):
+        import numpy as np
+        nfw_rs = existing_properties['r200c']/existing_properties['nfw_concentration_vel']
+        index_nfw_rs = np.where(existing_properties['rbins_profile'] >= nfw_rs)[0]
+        index_nfw_rs = index_nfw_rs.min()
+        return existing_properties['dm_mass_profile'][index_nfw_rs]
+
+    def requires_property(self):
+        return ["rbins_profile", "dm_mass_profile", "nfw_concentration_vel", "r200c"]

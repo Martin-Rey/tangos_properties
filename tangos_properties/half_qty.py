@@ -24,8 +24,13 @@ class TimeAtWhichQuantityIsXXPerCent(PropertyCalculation):
         return cls._get_qty_name()
 
     @classmethod
-    def get_target(cls):
-        return cls._get_target_value()
+    def get_target(cls, halo):
+        if type(cls._get_target_value()) is str:
+            return halo[cls._get_target_value()]
+        elif type(cls._get_target_value()) is float:
+            return cls._get_target_value()
+        else:
+            raise KeyError("Definition not supported")
 
     @classmethod
     def no_proxies(self):
@@ -40,7 +45,7 @@ class TimeAtWhichQuantityIsXXPerCent(PropertyCalculation):
         # TODO All these catch blocks are ugly but this is the only to make sure that the property will spit out intelligble errors
         parent = existing_properties
         qty_in_parent = parent[self.get_qty()]
-        overall_target = self.get_target() * qty_in_parent
+        overall_target = self.get_target(existing_properties)
 
         try:
             child = parent.calculate("earlier(1)")
@@ -67,16 +72,17 @@ class TimeAtWhichQuantityIsXXPerCent(PropertyCalculation):
                 raise KeyError(self.get_qty() + " does not exist in %r " % child)
 
         return self._find_linear_intersect(qty_in_parent, qty_in_child, parent.calculate("z()"),
-                                           child.calculate("z()"), overall_target), \
-               self._find_linear_intersect(qty_in_parent, qty_in_child, parent.calculate("a()"),
-                                           child.calculate("a()"), overall_target)
+                                           child.calculate("z()"), overall_target)
 
     def requires_property(self):
-        return [self._get_qty_name()]
+        if type(self._get_target_value()) is str:
+            return [self._get_qty_name(), self._get_target_value()]
+        else:
+            return [self._get_qty_name()]
 
 
 class HalfVirialMass(TimeAtWhichQuantityIsXXPerCent):
-    names = "z_halfMvir", "a_halfMvir"
+    names = "z_halfMvir"
 
     @staticmethod
     def _get_qty_name():
@@ -88,7 +94,7 @@ class HalfVirialMass(TimeAtWhichQuantityIsXXPerCent):
 
 
 class HalfMass(TimeAtWhichQuantityIsXXPerCent):
-    names = "z_halfMass", "a_halfMass"
+    names = "z_halfMass"
 
     @staticmethod
     def _get_qty_name():
@@ -99,8 +105,44 @@ class HalfMass(TimeAtWhichQuantityIsXXPerCent):
         return 0.5
 
 
+class FourPerCentMass(TimeAtWhichQuantityIsXXPerCent):
+    names = "z_fourpercent"
+
+    @staticmethod
+    def _get_qty_name():
+        return "halo_finder_mass"
+
+    @staticmethod
+    def _get_target_value():
+        return 0.04
+
+
+class TenPerCentMass(TimeAtWhichQuantityIsXXPerCent):
+    names = "z_tenpercent"
+
+    @staticmethod
+    def _get_qty_name():
+        return "halo_finder_mass"
+
+    @staticmethod
+    def _get_target_value():
+        return 0.1
+
+
+class TwentyPerCentMass(TimeAtWhichQuantityIsXXPerCent):
+    names = "z_twentypercent"
+
+    @staticmethod
+    def _get_qty_name():
+        return "halo_finder_mass"
+
+    @staticmethod
+    def _get_target_value():
+        return 0.2
+
+
 class HalfM200c(TimeAtWhichQuantityIsXXPerCent):
-    names = "z_halfM200c", "a_halfM200c"
+    names = "z_halfM200c"
 
     @staticmethod
     def _get_qty_name():
@@ -112,7 +154,7 @@ class HalfM200c(TimeAtWhichQuantityIsXXPerCent):
 
 
 class FourPerCentM200c(TimeAtWhichQuantityIsXXPerCent):
-    names = "z_fourpercentM200c", "a_fourpercentM200c"
+    names = "z_fourpercentM200c"
 
     @staticmethod
     def _get_qty_name():
@@ -124,7 +166,7 @@ class FourPerCentM200c(TimeAtWhichQuantityIsXXPerCent):
 
 
 class TenPerCentM200c(TimeAtWhichQuantityIsXXPerCent):
-    names = "z_tenpercentM200c", "a_tenpercentM200c"
+    names = "z_tenpercentM200c"
 
     @staticmethod
     def _get_qty_name():
@@ -136,7 +178,7 @@ class TenPerCentM200c(TimeAtWhichQuantityIsXXPerCent):
 
 
 class TwentyPerCentM200c(TimeAtWhichQuantityIsXXPerCent):
-    names = "z_twentypercentM200c", "a_twentypercentM200c"
+    names = "z_twentypercentM200c"
 
     @staticmethod
     def _get_qty_name():
@@ -145,3 +187,27 @@ class TwentyPerCentM200c(TimeAtWhichQuantityIsXXPerCent):
     @staticmethod
     def _get_target_value():
         return 0.2
+
+
+class WhenM200cIsNFWMass(TimeAtWhichQuantityIsXXPerCent):
+    names = "z_nfwM200c"
+
+    @staticmethod
+    def _get_qty_name():
+        return "M200c"
+
+    @staticmethod
+    def _get_target_value():
+        return "M_1nfw_rs"
+
+
+class WhenMassIsNFWMass(TimeAtWhichQuantityIsXXPerCent):
+    names = "z_nfwMass"
+
+    @staticmethod
+    def _get_qty_name():
+        return "halo_finder_mass"
+
+    @staticmethod
+    def _get_target_value():
+        return "M_1nfw_rs"

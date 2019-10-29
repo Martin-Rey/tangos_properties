@@ -1,5 +1,5 @@
 from tangos.properties.pynbody import PynbodyHaloProperties
-from tangos.properties import PropertyCalculation
+from tangos.properties import LivePropertyCalculation
 from tangos.properties.pynbody.centring import centred_calculation
 
 
@@ -95,7 +95,7 @@ class Radius500c(Radius):
         return 'critical'
 
 
-class HalfMassRadius(PropertyCalculation):
+class HalfMassRadius(LivePropertyCalculation):
     names = "half_mass_radius"
 
     def no_proxies(self):

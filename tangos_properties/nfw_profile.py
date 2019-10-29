@@ -214,3 +214,29 @@ class NFWVelocityConcentration(LivePropertyCalculation):
 
     def requires_property(self):
         return ['r200c', 'dm_vcirc_profile', "M200c"]
+
+
+class NFWHalfMassConcentration(LivePropertyCalculation):
+    names = "nfw_concentration_halfmass"
+
+    def no_proxies(self):
+        return True
+
+    def calculate(self, _, existing_properties):
+        import numpy as np
+        import scipy.optimize as so
+
+        r200c = existing_properties['r200c']
+        r_half_mass = existing_properties['half_mass_radius']
+        ratio = r_half_mass / r200c
+
+        def f(c):   # Lokas and Mamon 2000, eq 28
+            return 0.6082 - 0.1843 * np.log10(c) - 0.1011 * (np.log10(c) ** 2) + 0.03918 * (np.log10(c) ** 3)
+
+        def root(c):
+            return f(c) - ratio
+
+        return so.newton(root, 1)
+
+    def requires_property(self):
+        return ['r200c', 'half_mass_radius', "M200c"]
